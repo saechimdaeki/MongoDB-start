@@ -91,3 +91,53 @@
 - 스키마 설꼐가 어렵지만, 스키마가 유연해서 Application의 요구사항에 맞게 데이터를 수용할 수 있다
 - 분산에 대한 솔루션을 자체적으로 지원해서 Scale-Out이 쉽다
 - 확장 시, Application을 변경하지 않아도 된다.
+
+
+---
+
+## MongoDB 구조
+
+||||
+|:--:|:--:|:--:|
+|`RDBMS`||`MongoDB`|
+|Cluster| -> | Cluster|
+|Database | -> | Database|
+|Table| -> |Collection|
+|Row| -> |Document|
+|Column| -> |Field|
+
+### 기본 Database
+
+|||
+|:--:|:--|
+|`Database`| `Description`|
+|admin| - 인증과 권한 부여 역할 <br/> - 일부관리 작업을 하려면 admin Database에 대한 접근이 필요하다|
+|local|- 모든 mongod instance는 local database를 소유한다 <br/> - oplog와 같은 replication 절차에 필요한 정보를 저장한다 <br/> - startup_log와 같은 instance 진단 정보를 저장한다 <br/> - local database 자체는 복제되지 않는다|
+|config|- shared cluster에서 각 shard의 정보를 저장한다|
+
+
+![image](https://user-images.githubusercontent.com/40031858/208274651-1bad092c-a052-4289-a136-32e7b744ffd7.png)
+
+### Collection 특징
+- 동적 스키마를 갖고 있어서 스키마를 수정하려면 필드 값을 추가/수정/삭제하면 된다
+- Collection 단위로 Index를 생성할 수 있다
+- Collection 단위로 Shard를 나눌 수 있다.
+
+![image](https://user-images.githubusercontent.com/40031858/208275206-7dd4868d-e546-4707-af46-509da0e01cf1.png)
+
+### Document 특징
+- JSON 형태로 표현하고 BSON(Binary JSON) 형태로 저장한다
+- 모든 Document에는 "_id"필드가 있고, 없이 생성하면 ObjectId 타입의 고유한 값을 저장한다
+- 생성 시, 상위 구조인 Database나 Collection이 없다면 먼저 생성하고 Document를 생성한다
+- Document의 최대 크기는 16MB이다
+
+![image](https://user-images.githubusercontent.com/40031858/208275921-937dbf36-7020-4aad-8a28-d5c34fcb56b9.png)
+
+```markdown
+- Database -> Collection -> Document -> Field 순으로 구조가 형성되어 있다
+- admin, config, local database는 MongoDB를 관리하는데 사용된다.
+- Collection은 동적 스키마를 갖느다
+- Document는 JSON형태로 표현되고 BSON 형태로 저장된다
+- Document는 고유한 "_id" 필드를 항상 갖고 있다
+- Document의 최대 크기는 16MB로 고정되어 있다
+```
