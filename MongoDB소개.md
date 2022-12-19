@@ -163,3 +163,93 @@
 
 <img width="892" alt="image" src="https://user-images.githubusercontent.com/40031858/208394225-a4d7500d-73ed-45ba-8934-c6b6ada5b8da.png">
 
+
+---
+
+## Replica Set
+
+### Replica Set Members
+
+|||
+|:--:|:--|
+|status|Description|
+|Primary|- Read/Write 요청 모두 처리할 수 있다 <br/> - Write를 처리하는 유일한 멤버이다 <br/> - Replica Set에 하나만 존재할 수 있다|
+|Secondary|- Read에 대한 요청만 처리할 수 있다 <br/> - 복제를 통해 Primary와 동잃한 데이터 셋을 유지한다 <br/> - Replica Set에 여러개가 존재할 수 있다|
+
+### Replica Set Election(Fail-Over)
+
+<img width="595" alt="image" src="https://user-images.githubusercontent.com/40031858/208396027-1f3fb016-0c82-44a2-8f92-de923c616411.png">
+
+
+### Replica Set Arbiter
+
+<img width="1299" alt="image" src="https://user-images.githubusercontent.com/40031858/208400425-23528d92-8645-4533-b69c-2d67534833e6.png">
+
+### Replica Set Oplog
+
+<img width="770" alt="image" src="https://user-images.githubusercontent.com/40031858/208400533-a4f10441-c075-4ed5-9bf3-0e0b1c39867c.png">
+
+
+```markdown
+- Replica Set은 HA 솔루션이다.
+- 데이털르 들고 있는 멤버의 상태는 Primary와 Secondary가 있다.
+- Secondary는 선출을 통해 과반수의 투표를 얻어서 Primary가 될 수 있다.
+- Arbiter는 데이터를 들고 있지 않고 Primary 선출 투표에만 참여하는 멤버이다.
+- Replica Set은 local database의 Oplog Collection을 통해 복제를 수행한다.
+```
+
+--- 
+
+## Sharded Cluster
+
+
+### 모든 Shard는 Replica Set으로 구성되어 있다
+
+<img width="1205" alt="image" src="https://user-images.githubusercontent.com/40031858/208403838-1c26fff7-e2ce-4152-977e-d93d05197fcf.png">
+
+### Sharded Cluster 장단점
+
+|||
+|:--|:--|
+|장점|단점|
+|- 용량의 한계를 극복할 수 있다. <br/> - 데이터 규모와 부하가 크더라도 처리량이 좋다 <br/> - 고가용성을 보장한다 <br/> - 하드웨어에 대한 제약을 해결할 수 있다|- 관리가 비교적 복잡하다 <br/> - Replica Set과 비교해서 쿼리가 느리다|
+
+### 용어 비교
+
+|||
+|:--|:--|
+|Sharding|Partitioning|
+|- 하나이ㅡ 큰 데이터를 여러 서브셋으로 나누어 여러 <br/> 인스턴스에 저장하는 기술|- 하나의 큰 데이터를 여러 서브셋으로 나누어 하나의 <br/> 인스턴스의 여러 테이블로 나누어 저장하는 기술 |
+
+|||
+|:--|:--|
+|Replica Set|Sharded Cluster|
+|- Replica Set은 각각 멤버가 같은 데이터 셋을 갖는다|- Sharded Cluster는 각각 Shard가 다른 <br/> 데이터의 서브셋을 갖는다|
+
+<img width="815" alt="image" src="https://user-images.githubusercontent.com/40031858/208407047-510414d0-802b-4063-a15e-eb89515216b6.png">
+
+
+### Sharding Collections
+
+<img width="532" alt="image" src="https://user-images.githubusercontent.com/40031858/208407188-dc529613-f06a-470b-9d80-597d5f59a286.png">
+
+### Ranged Sharding
+
+<img width="877" alt="image" src="https://user-images.githubusercontent.com/40031858/208407251-c2c7cb0c-4017-4b58-aec5-7e1841eae145.png">
+
+### Hashed Sharding
+
+<img width="895" alt="image" src="https://user-images.githubusercontent.com/40031858/208407335-51ecda0c-8a70-41db-b891-23b364e2d67b.png">
+
+### Zone Sharding
+
+<img width="951" alt="image" src="https://user-images.githubusercontent.com/40031858/208407419-9c83e378-3739-42fd-98d3-6621f1be0f36.png">
+
+```markdown
+- Sharded Cluster는 MongoDB의 분산 Solution이다.
+- Collection 단위로 Sharding이 가능하다.
+- Sharding은 Shard Key를 선정해야하고 해당 필드에는 Index가 만들어져 있어야한다.
+- 꼭 Router를 통해 접근한다.
+- Range와 Hashed Sharding 두 가지 방법이 있다.
+- 가능하면 Hashed Sharding을 통해 분산한다
+```
