@@ -141,3 +141,25 @@
 - Document는 고유한 "_id" 필드를 항상 갖고 있다
 - Document의 최대 크기는 16MB로 고정되어 있다
 ```
+
+## MongoDB 배포 형태 소개
+
+- standalone
+- Replica Set
+- Sharded Cluster
+
+이러한 세가지 형태의 배포가 있다.
+
+### standalone
+
+<img width="788" alt="image" src="https://user-images.githubusercontent.com/40031858/208394088-3a91deb1-d547-4866-bd8b-e7894cc7e00b.png">
+
+
+### Replica Set
+
+<img width="944" alt="image" src="https://user-images.githubusercontent.com/40031858/208394175-90f7598b-0097-46ba-8a48-692065b451bb.png">
+
+### Sharded Cluster
+
+<img width="892" alt="image" src="https://user-images.githubusercontent.com/40031858/208394225-a4d7500d-73ed-45ba-8934-c6b6ada5b8da.png">
+
