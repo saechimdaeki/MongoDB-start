@@ -253,3 +253,48 @@
 - Range와 Hashed Sharding 두 가지 방법이 있다.
 - 가능하면 Hashed Sharding을 통해 분산한다
 ```
+
+---
+
+## Replica Set vs Sharded Cluster 어떻게 배포할까?
+
+
+![image](https://user-images.githubusercontent.com/40031858/208585607-98ba0f8d-164e-4682-ad75-afad4ca75c6a.png)
+
+
+### 예시 1) 매일 1GB씩 데이터가 증가하고 3년간 보관 -> `환경에 따라 다르다`
+
+### 예시 2) Write 요청이 압도적으로 많은 서비스 -> `Sharded Cluster` 
+- Replica Set은 Write에 대한 분산이 불가능
+
+### 예시 3) 논리적인 데이터베이스가 많은 경우 -> 여러 Replica Set으로 분리
+
+### Replica Set vs Sharded Cluster
+
+||||
+|:--:|:--|:--|
+|배포 형태 | 장점| 단점 |
+|Replica Set|- 운영이 쉽다 <br/> - 장애 발생시 문제 해결 및 복구가 쉽다 <br/> - 서버 비용이 적게 든다 <br/> - 성능이 좋다 <br/> - 개발 시 설계가 용이하다|- Read에 대한 분산이 가능하지만, Write에 대한 분산은 불가능|
+|Sharded Cluster|- Scale-Out이 가능하다 <br/> - Write에 대한 분산이 가능하다|- Replica Set의 모든 장점이 상대적으로 단점이 된다|
+
+### 결론
+
+![image](https://user-images.githubusercontent.com/40031858/208585998-bc63f7af-5ec5-4fb9-baa3-1a6c025ae810.png)
+
+---
+
+## MongoDB Storage Engines
+
+### Storage Engine이란?
+- 데이터가 메모리와 디스크에 어떻게 저장하고 읽을지 관리하는 컴포넌트이다
+- MySQL과 동일하게 Plugin 형태로 되어 있어 MongoDB도 다양한 Storage Engine을 사용할 수 있다
+- MongoDB 3.2부터 MongoDB의 기본 Storage Engine은 WiredTiger이다(기존에는 MMAPv1사용)
+- WiredTiger가 도입되면서 MongoDB의 성능은 큰 폭으로 좋아졌다
+
+### WiredTiger Sotrage Engine 개선 사항
+
+||||
+|:--:|:--|:--|
+|항목|MMAPv1|WiredTiger|
+|Data Compression|지원하지 않는다| 지원한다|
+|Lock|버전에 따라 Database 혹은 <br/> Collection 레벨의 Lock| Document레벨의 Lock|
