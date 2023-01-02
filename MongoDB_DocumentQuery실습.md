@@ -188,3 +188,128 @@ db.planets.find(
     { mainAtmosphere: {$in: ['O2']  }}
 )
 ```
+
+## 유용한 Query 함수들
+
+https://www.mongodb.com/docs/v5.0/reference/method/
+
+#### bulkWrite()
+- 여러 종류의 변경사항을 배치성 작업으로 수행해야할 때 유용하게 사용할 수 있는 함수
+
+```mongo
+db.collection.bulkwrite(
+    [ <operation 1>, <operation2>, ...],
+    {
+        writeConcern: <document>,
+        ordered: <boolean>
+    }
+)
+```
+
+```mongo
+db.bulk.bulkWrite(
+    [
+        {insertOne: {doc:1 , order:1}},
+        {insertOne: {doc:2 , order:2}},
+        {insertOne: {doc:3 , order:3}},
+        {insertOne: {doc:4 , order:4}},
+        {insertOne: {doc:4 , order:5}},
+        {insertOne: {doc:5 , order:6}},
+        {
+            deleteOne: {
+                filter: {doc: 3}
+            }
+        },
+        {
+            updateOne: {
+                filter: {doc: 2},
+                update: {
+                    $set: {doc: 12}
+                }
+            }
+        }
+    ]
+)
+```
+
+<img width="510" alt="image" src="https://user-images.githubusercontent.com/40031858/210190664-7116a3a3-9724-42be-b337-b68f474e0f19.png">
+
+
+
+ordered false라면 순서와 상관없이 성능을 우선시 해서 함수를 실행할 수 있음.
+```mongo
+db.bulk.bulkWrite(
+    [
+        {insertOne: {doc:1 , order:1}},
+        {insertOne: {doc:2 , order:2}},
+        {insertOne: {doc:3 , order:3}},
+        {insertOne: {doc:4 , order:4}},
+        {insertOne: {doc:4 , order:5}},
+        {insertOne: {doc:5 , order:6}},
+        {
+            updateOne: {
+                filter: {doc: 2},
+                update: {
+                    $set: {doc: 12}
+                }
+            }
+        },
+        {
+            deleteMany: {
+                filter: {doc: 3}
+            }
+        },
+    ],
+    {ordered: false}
+)
+```
+
+mongodb는 document 레벨에서 원자성을 보장. insertMany함수를 해서 100만개의 데이터를 삽입되고 있는데 중간에 문제가 발생되면
+
+롤백하지 않고 삽입한 곳 까지만하고 명령을 끝내버림.
+
+#### countDocuments()
+
+- document에 대한 수를 확인 
+
+```mongo
+db.bulk.countDocuments()
+```
+
+#### distinct()
+- 고유한 필드의 값을 가져옴
+
+```mongo
+db.bulk.distinct("doc")
+```
+
+<img width="588" alt="image" src="https://user-images.githubusercontent.com/40031858/210192227-8fce6fa3-f9a1-47a9-93d2-c7767d7f55f9.png">
+
+#### findAndModify()
+
+- 동시성에 대한 제어를 위한 함수. 수정하기 전에 document를 반환하고 수정하거나 수정하고 수정된 값을 반환
+
+```mongo
+db.bulk.findAndModify({
+    query: { doc: 4 },
+    update: { $inc: {doc: 1} }
+})
+```
+<img width="931" alt="image" src="https://user-images.githubusercontent.com/40031858/210192302-76ea5b48-1fc9-4e46-8838-6bf0614df1f2.png">
+
+#### getIndexes()
+
+- 해당 collection에 생성되어 있는 index를 볼 수 있는 쿼리
+
+<img width="559" alt="image" src="https://user-images.githubusercontent.com/40031858/210192465-02e8842c-835d-4b87-912f-3bdd0f2a2cd3.png">
+
+#### replaceOne()
+
+- document 전체를 수정할 때 사용하는 함수 _id는 변경되지 않음 
+
+```mongo
+db.bulk.replaceOne({ doc: 1}, {doc: 13})
+```
+
+<img width="597" alt="image" src="https://user-images.githubusercontent.com/40031858/210192627-9f57063d-b883-4e1a-b502-612cbe08adf2.png">
+
