@@ -313,3 +313,334 @@ db.bulk.replaceOne({ doc: 1}, {doc: 13})
 
 <img width="597" alt="image" src="https://user-images.githubusercontent.com/40031858/210192627-9f57063d-b883-4e1a-b502-612cbe08adf2.png">
 
+
+---
+
+## 배열과 내장 Document를 다루는 방법
+
+실습은 sample data set인 sample_supplies사용
+
+```
+use sample_supplies
+show collections
+-- sales
+```
+
+내장 document에 대한 field로 조회를 하려면 내장 document 전체를 그대로 사용해야 조회 가능
+
+```mongo
+db.sales.findOne({
+    customer: { gender: 'F', age: 39, email: 'beecho@wic.be', satisfaction: 3 }
+})
+```
+
+내장 document안에 있는 필드로 조회할 때는 다음과 같이 가능하다
+
+```mongo
+db.sales.findOne({
+    "customer.email": "keecade@hem.uy"
+})
+
+
+db.sales.findOne({
+    "customer.age": {$lt: 20}
+})
+```
+
+```mmongo
+db.inventory.insertMany([
+   { item: "journal", qty: 25, tags: ["blank", "red"], dim_cm: [ 14, 21 ] },
+   { item: "notebook", qty: 50, tags: ["red", "blank"], dim_cm: [ 14, 21 ] },
+   { item: "paper", qty: 100, tags: ["red", "blank", "plain"], dim_cm: [ 14, 21 ] },
+   { item: "planner", qty: 75, tags: ["blank", "red"], dim_cm: [ 22.85, 30 ] },
+   { item: "postcard", qty: 45, tags: ["blue"], dim_cm: [ 10, 15.25 ] },
+   { item: "postcard", qty: 45, tags: ["blue", "red"], dim_cm: [ 13, 14 ] }
+]);
+```
+
+
+배열도 마찬가지로 field그대로 queryfilter를 사용하면 내장 document처럼 순서까지 동일해야 결과가 나옴.
+
+```mongo
+db.inventory.find({
+    tags:['red', 'blank']
+})
+```
+
+순서가 변경이 되어도 'red'와 'blank'가 모두 들어간 값들을 검색하려면 다음과 같이 할 수 있다
+
+```mongo
+db.inventory.find({
+    tags: { $all: ['red', 'blank'] }
+})
+```
+
+'red'나 'blank'가 들어간 값들을 검색하면 다음과 같이
+
+```mongo
+db.inventory.find({
+    tags: { $in: ['red', 'blank'] }
+})
+```
+
+배열 요소 중에 하나라도 queryfilter를 만족하는 값을 찾을 때 다음과 같이 할 수도 있다
+
+```mongo
+db.inventory.find({
+    tags: 'blue'
+})
+```
+
+배열 요소 중 하나라도 조건에 모두 만족하는 요소가 있다면 반환해주는 operator예시는 다음과 같다
+
+```mongo
+db.inventory.find({
+    dim_cm: {$elemMatch: {$gt: 15, $lt: 20}}
+})
+```
+
+배열의 특정 위치에 조건절을 주고 싶다면 다음과 같이 할 수 있다
+
+```mongo
+db.inventory.find({
+    "dim_cm.1": {$lt: 20}
+})
+```
+
+
+```mongo
+db.sales.find({
+    "items.name": 'binder',
+    "items.quantity": {$lte: 6}
+})
+```
+
+포지셔닝 오퍼레이터를 사용하면 조건에 만족하는 첫번째 요소만 반환할 수 있음.
+
+```mongo
+db.sales.find(
+    {
+        items: {
+           $elemMatch: {
+                name: "binder",
+                quantity: {$lte: 6}
+            }
+        }
+    },
+    {
+        saleDate: 1,
+        "items.$": 1,
+        storeLocation: 1,
+        customer: 1
+    }
+)
+```
+
+<img width="939" alt="image" src="https://user-images.githubusercontent.com/40031858/210196365-c32eccf8-1779-4bbb-851a-3be5f57e1457.png">
+
+
+---
+
+다시 test로 넘어와서 다음과 같은 데이터를 삽입
+
+```mongo
+db.students.insertMany([
+    {_id: 1, grades: [85, 80, 80]},
+    {_id: 2, grades: [88, 90, 92]},
+    {_id: 3, grades: [85, 100, 90]},
+])
+```
+
+배열 요소 중 grade가 80인 첫 번째 요소를 82로 변경해보자
+
+```mongo
+db.students.updateOne(
+    {_id: 1, grades: 80},
+    {$set: {"grades.$": 82}}
+)
+```
+
+<img width="532" alt="image" src="https://user-images.githubusercontent.com/40031858/210196560-fc8c18a7-20be-4a51-b576-7f6199949d99.png">
+
+
+모든 document에 대해 모든 grade를 10씩 올리려면 다음과 같이 할 수 있다
+
+```mongo
+db.students.updateMany(
+    {},
+    {$inc: {"grades.$[]": 10}}
+)
+```
+
+다음 실습을 위해 데이터를 더 넣어주자
+
+```mongo
+db.students.insertMany([
+    {
+        _id: 4,
+        grades: [
+            {grade: 80, mean: 75, std: 8},
+            {grade: 85, mean: 90, std: 5},
+            {grade: 85, mean: 85, std: 8},
+        ]
+    }
+])
+```
+
+
+처음 만나는 grade가 85이상인 값의 std를 6으로 변경해보자
+
+```mongo
+db.students.updateOne(
+    { _id: 4, "grades.grade": 85},
+    {$set: {"grades.$.std": 6}}
+)
+```
+
+마찬가지로 elemMatch도 사용할 수 있다
+
+```mongo
+db.students.updateOne(
+    { _id: 4, grades: {$elemMatch: {grade: {$gte: 85}}}},
+    {$set: {"grades.$.grade": 100}}
+)
+```
+
+해당 document에 대해 grade가 87이상인 배열 요소에만 대해서 grade를 100으로 변경해보자
+
+```mongo
+db.students.updateMany(
+    { _id: 6},
+    { $set: { "grades.$[element].grade": 100 }},
+    { arrayFilters: [{"element.grade": {$gte: 87}}]}
+)
+```
+
+```mongo
+db.students.updateOne(
+    { _id: 7 },
+    {$inc: {"grades.$[].questions.$[score]": 2}},
+    {arrayFilters: [{score: {$gte: 8}}]}
+)
+```
+
+이제 배열의 값을 넣고 빼보자
+
+```mongo
+db.shopping.insertMany([
+    {
+        _id: 1,
+        cart: ['banana', 'cheeze', 'milk'],
+        coupons: ['10%', '20%', '30%']
+    },
+    {
+        _id: 2,
+        cart: [],
+        coupons: []
+    }
+])
+```
+
+배열의 값이 없는 경우에만 삽입하는 operatordls set을 사용해보자
+
+```mongo
+db.shopping.updateOne(
+    { _id: 1 },
+    {$addToSet: {cart: 'beer' }}
+)
+```
+
+<img width="854" alt="image" src="https://user-images.githubusercontent.com/40031858/210197426-ebc4e08e-a24d-4d38-b516-a275d34c8bca.png">
+
+수정이 된 건 0건이다 라는걸 볼 수 있음.
+
+
+그렇다면 배열을 넣고 싶을때 이렇게 하면되지 않을까 생각할 수 있다
+
+```mongo
+db.shopping.updateOne(
+    { _id: 1 },
+    {$addToSet: {cart: ['beer', 'candy'] }}
+)
+```
+
+<img width="554" alt="image" src="https://user-images.githubusercontent.com/40031858/210197580-338d2ddc-b438-443b-b023-9d835e0b64da.png">
+
+하지만 기대와 달리 배열 자체가 들어가버린다.
+
+이럴 때 우리는 each라는 것을 사용할 수 있다
+
+```mongo
+db.shopping.updateOne(
+    { _id: 1 },
+    {$addToSet: {cart: { $each: ['beer', 'candy']  }}}
+)
+```
+
+
+<img width="461" alt="image" src="https://user-images.githubusercontent.com/40031858/210197613-bc2ce588-0524-46d0-87b8-58f3c782c8ae.png">
+
+
+값을 기준으로 배열에서 제거하는 pull 이라는 operator도 있다
+
+```Mongo
+db.shopping.updateOne(
+    { _id: 1 },
+    {$pull: {cart: 'beer' }}
+)
+```
+
+배열 양쪽 끝을 제어할 수 있는 pop과 push도 있다
+
+```mongo
+db.shopping.updateOne(
+    {_id: 1},
+    {$pop: {cart: 1, coupons: -1}}
+)
+```
+
+push는 마지막에만 데이터를 넣어준다 
+
+
+```mongo
+db.shopping.updateOne(
+    {_id: 1},
+    {$push : {cart: 'popcorn'}}
+)
+```
+
+
+position을 통해 어디에 넣을지 또한 가능하다.
+
+
+```mongo
+db.shopping.updateMany(
+    {},
+    {
+        $push: {
+            coupons:{
+                $each: ['90%', '70%'],
+                $position: 0
+            }
+        }
+    }
+)
+```
+
+slice라는 operator가 있는데 배열의 크기를 제한할 수 있는 operator이다.
+
+
+```mongo
+db.shopping.updateMany(
+    {},
+    {
+        $push: {
+            coupons:{
+                $each: ['15%', '20%'],
+                $position: 0,
+                $slice: 5
+            }
+        }
+    }
+)
+```
