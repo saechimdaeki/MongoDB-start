@@ -115,3 +115,52 @@ db.zips.find(
 	}
 ).sort({ city: 1 }).explain('executionStats')
 ```
+
+
+---
+
+## Multikey Index
+
+몽고 DB는 배열필드거나 배열안에 내장되어 있는 필드로 index를 만들 수 있고 그렇게 생성하면 multikey index로 구분이된다.
+
+<img width="960" alt="image" src="https://user-images.githubusercontent.com/40031858/212537927-550cdedc-8fe8-48e1-b145-87dc312e75da.png">
+
+
+<img width="808" alt="image" src="https://user-images.githubusercontent.com/40031858/212537937-d7bfedfb-400f-42b3-a25c-04e7cc7e3f6c.png">
+
+### Multikey Index의 비용은 다음과 같다
+
+<img width="781" alt="image" src="https://user-images.githubusercontent.com/40031858/212537952-2553d904-93c9-4a64-9d28-63815f0c22bd.png">
+
+---
+
+## Index 생성시 주의사항 
+
+#### Background Option
+
+<img width="1163" alt="image" src="https://user-images.githubusercontent.com/40031858/212538155-f6ce8044-39d2-4f1b-911b-96122c9cbc4f.png">
+
+
+구문검사가 취약한 면이 있다.
+
+<img width="1044" alt="image" src="https://user-images.githubusercontent.com/40031858/212538235-110ea6bc-10f5-4f01-8b7f-d7fc83b7efb3.png">
+
+4.4 이전 까지 Index는 내부적으로 Primary에서 생성 완료하고 Secondary에 복제한다.
+
+Index 생성으로 인해서 발생하는 성능저하를 줄이기 위해 멤버 하나씩 접속해서 Rolling 형태로 Index를 생 성했다.
+- 하지만 너무 번거롭다.
+
+- Unique Index는 Collection에 대해서 Write가 없다는 것을 확인하고 생성해야한다. 
+- Index 생성 시간이 Oplog Window Hour보다 작아야한다.
+
+#### Drop Index
+
+<img width="1097" alt="image" src="https://user-images.githubusercontent.com/40031858/212538289-cc361618-96d5-47fe-ae82-10b30e90e3c4.png">
+
+
+버전 5.0 부터, Index 생성 중에 정상적으로 process가 shutdown되면 다시 기동 되었을 때 기존의 progress에 이어서 Index가 생성된다.
+
+비정상적으로 shutdown된 경우는 처음부터 Index를 다시 생성한다.
+
+
+<img width="1145" alt="image" src="https://user-images.githubusercontent.com/40031858/212538338-93dfe227-9f6b-4723-9641-55328c0cd689.png">
